@@ -1,397 +1,163 @@
-abzss
-=================
+# ABZSS — Abyss System
 
-Plataforma de automação e assistência ao desenvolvedor via CLI
+> Uma plataforma de automação para desenvolvedores que transforma o terminal na sua central de comando.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-green)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/abzss.svg)](https://npmjs.org/package/abzss)
-[![Downloads/week](https://img.shields.io/npm/dw/abzss.svg)](https://npmjs.org/package/abzss)
+---
 
+## O que é o ABZSS
 
-<!-- toc -->
-* [Usage](#usage)
-* [Commands](#commands)
-<!-- tocstop -->
-# Usage
-<!-- usage -->
-```sh-session
-$ npm install -g abzss
-$ abz COMMAND
-running command...
-$ abz (--version)
-abzss/0.0.0 linux-x64 node-v24.18.0
-$ abz --help [COMMAND]
-USAGE
-  $ abz COMMAND
-...
-```
-<!-- usagestop -->
-# Commands
-<!-- commands -->
-* [`abz hello PERSON`](#abz-hello-person)
-* [`abz hello world`](#abz-hello-world)
-* [`abz help [COMMAND]`](#abz-help-command)
-* [`abz plugins`](#abz-plugins)
-* [`abz plugins add PLUGIN`](#abz-plugins-add-plugin)
-* [`abz plugins:inspect PLUGIN...`](#abz-pluginsinspect-plugin)
-* [`abz plugins install PLUGIN`](#abz-plugins-install-plugin)
-* [`abz plugins link PATH`](#abz-plugins-link-path)
-* [`abz plugins remove [PLUGIN]`](#abz-plugins-remove-plugin)
-* [`abz plugins reset`](#abz-plugins-reset)
-* [`abz plugins uninstall [PLUGIN]`](#abz-plugins-uninstall-plugin)
-* [`abz plugins unlink [PLUGIN]`](#abz-plugins-unlink-plugin)
-* [`abz plugins update`](#abz-plugins-update)
+ABZSS (lê-se *Abyss*) não é apenas mais uma CLI. É uma **plataforma modular de automação e assistência ao desenvolvedor**, construída para crescer ao longo de anos sem que seu núcleo precise ser reescrito.
 
-## `abz hello PERSON`
+A ideia central: o terminal já é onde desenvolvedores passam boa parte do dia — rodando comandos, gerenciando repositórios, subindo containers, escrevendo código. O ABZSS quer ser a camada inteligente que une automação do sistema operacional, integração com ferramentas de desenvolvimento e Inteligência Artificial em um único lugar, sem sair do terminal.
 
-Say hello
-
-```
-USAGE
-  $ abz hello PERSON -f <value>
-
-ARGUMENTS
-  PERSON  Person to say hello to
-
-FLAGS
-  -f, --from=<value>  (required) Who is saying hello
-
-DESCRIPTION
-  Say hello
-
-EXAMPLES
-  $ abz hello friend --from oclif
-  hello friend from oclif! (./src/commands/hello/index.ts)
+```bash
+abz doctor              # diagnostica o ambiente
+abz git review           # revisa o estado do repositório Git
+abz open vscode           # abre o projeto (ou um caminho) no VS Code
+abz docker status          # verifica se o Docker está instalado e rodando
+abz ask "explique esse erro de SQL"    # (planejado)
+abz clean                                # (planejado)
+abz apex deploy                           # (planejado)
+abz plugin install oracle-apex             # (planejado)
 ```
 
-_See code: [src/commands/hello/index.ts](https://github.com/adyshavefear/abzss/blob/v0.0.0/src/commands/hello/index.ts)_
+## Filosofia
 
-## `abz hello world`
+Três princípios guiam toda decisão de arquitetura e código no ABZSS:
 
-Say hello world
+- **Automação inteligente** — tarefas repetitivas devem ser eliminadas, não documentadas.
+- **Arquitetura modular** — nenhum módulo novo deve exigir alterar o núcleo existente.
+- **Código limpo e escalável** — construído para ser mantido por uma equipe, não só por uma pessoa.
 
-```
-USAGE
-  $ abz hello world
+Nenhuma decisão é tomada pensando apenas no presente. Cada peça do sistema é implementada já prevendo integrações futuras.
 
-DESCRIPTION
-  Say hello world
+## Para quem é
 
-EXAMPLES
-  $ abz hello world
-  hello world! (./src/commands/hello/world.ts)
-```
+O ABZSS é pensado para desenvolvedores e equipes que:
 
-_See code: [src/commands/hello/world.ts](https://github.com/adyshavefear/abzss/blob/v0.0.0/src/commands/hello/world.ts)_
+- Trabalham fortemente pelo terminal e querem automatizar o ambiente de desenvolvimento.
+- Usam múltiplas ferramentas no dia a dia (Git, Docker, VS Code, bancos Oracle, Oracle APEX) e querem orquestrá-las de um lugar só.
+- Querem IA integrada ao fluxo de trabalho — não como um chat separado, mas como parte do próprio CLI.
+- Valorizam arquitetura limpa e extensibilidade a longo prazo, em vez de scripts descartáveis.
 
-## `abz help [COMMAND]`
+## Agentes de IA (planejado)
 
-Display help for abz.
+O ABZSS terá dois agentes com responsabilidades bem separadas. Essa fase está pausada no momento — ver seção **Status atual**.
 
-```
-USAGE
-  $ abz help [COMMAND...] [-n]
+### Assistant Agent
+Responsável por explicar código, tirar dúvidas, interpretar erros e ensinar tecnologias (SQL, PL/SQL, JavaScript, Node, Oracle APEX). **Nunca modifica arquivos** — é somente consultivo.
 
-ARGUMENTS
-  [COMMAND...]  Command to show help for.
+### Clean Agent
+Responsável por refatoração, padronização, nomenclatura, organização e boas práticas (SOLID, Clean Code). **Pode modificar arquivos**, mas sempre mediante aprovação explícita do usuário antes de qualquer alteração.
 
-FLAGS
-  -n, --nested-commands  Include all nested commands in the output.
+## Arquitetura
 
-DESCRIPTION
-  Display help for abz.
-```
-
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/6.2.53/src/commands/help.ts)_
-
-## `abz plugins`
-
-List installed plugins.
+O projeto segue Clean Architecture, com separação estrita de responsabilidades entre camadas:
 
 ```
-USAGE
-  $ abz plugins [--json] [--core]
-
-FLAGS
-  --core  Show core plugins.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  List installed plugins.
-
-EXAMPLES
-  $ abz plugins
+abzss/
+├── bin/                 # Entry points executáveis (Oclif)
+├── src/
+│   ├── commands/        # Comandos Oclif — apenas parsing, sem lógica de negócio
+│   ├── core/             # Contratos (interfaces), erros customizados, event bus
+│   ├── services/         # Regras de negócio — orquestram core + integrations
+│   ├── integrations/     # Adapters externos (Git, Docker, Oracle, APEX, VS Code)
+│   ├── agents/            # Assistant Agent, Clean Agent, abstração de provedor de IA
+│   ├── cli/ui/            # Formatação de terminal (Chalk, Ora)
+│   ├── hooks/              # Hooks Oclif (ex: banner ASCII ao rodar sem comando)
+│   ├── plugins/           # Sistema de plugins carregáveis dinamicamente
+│   ├── config/            # Configuração validada com Zod (global + por projeto)
+│   ├── prompts/           # Templates de prompt para os agentes de IA
+│   └── templates/         # Scaffolds de geração de código
+├── test/
+└── docs/
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/5.4.84/src/commands/plugins/index.ts)_
+O princípio central: `services/` nunca depende diretamente de `integrations/` — depende de uma interface definida em `core/contracts/`. Trocar a forma como o ABZSS fala com o Docker, por exemplo, nunca deveria exigir tocar em mais de um arquivo. Cada integração segue o mesmo fluxo: **contrato → adapter → service → printer → command**.
 
-## `abz plugins add PLUGIN`
+## Stack tecnológica
 
-Installs a plugin into abz.
+| Camada | Tecnologia | Motivo |
+|---|---|---|
+| Runtime | Node.js ≥ 18 | Padrão de mercado, ecossistema maduro |
+| Linguagem | TypeScript 5 (ESM) | Tipagem forte para um projeto de longo prazo |
+| Framework CLI | Oclif (`@oclif/core` v4) | Sistema de plugins nativo, essencial para `abz plugin install` |
+| Terminal UI | Chalk | Output colorido e feedback visual |
+| Validação | Zod | Configuração validada com inferência automática de tipos |
+| IA | SDK abstraído via `agents/provider/` | Permite trocar de provedor de IA sem reescrever os agentes (planejado) |
+| Testes | Mocha + Chai | Testes unitários com fakes/dublês, sem depender de ferramentas externas instaladas |
+| Lint | ESLint 9 (flat config) + Prettier | Padrão consistente de código |
 
-```
-USAGE
-  $ abz plugins add PLUGIN... [--json] [-f] [-h] [-s | -v]
+## Sistema de configuração
 
-ARGUMENTS
-  PLUGIN...  Plugin to install.
-
-FLAGS
-  -f, --force    Force npm to fetch remote resources even if a local copy exists on disk.
-  -h, --help     Show CLI help.
-  -s, --silent   Silences npm output.
-  -v, --verbose  Show verbose npm output.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Installs a plugin into abz.
-
-  Uses npm to install plugins.
-
-  Installation of a user-installed plugin will override a core plugin.
-
-  Use the ABZ_NPM_LOG_LEVEL environment variable to set the npm loglevel.
-  Use the ABZ_NPM_REGISTRY environment variable to set the npm registry.
-
-ALIASES
-  $ abz plugins add
-
-EXAMPLES
-  Install a plugin from npm registry.
-
-    $ abz plugins add myplugin
-
-  Install a plugin from a github url.
-
-    $ abz plugins add https://github.com/someuser/someplugin
-
-  Install a plugin from a github slug.
-
-    $ abz plugins add someuser/someplugin
-```
-
-## `abz plugins:inspect PLUGIN...`
-
-Displays installation properties of a plugin.
+O ABZSS lê configuração de dois lugares, com merge entre eles:
 
 ```
-USAGE
-  $ abz plugins inspect PLUGIN...
-
-ARGUMENTS
-  PLUGIN...  [default: .] Plugin to inspect.
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Displays installation properties of a plugin.
-
-EXAMPLES
-  $ abz plugins inspect myplugin
+~/.abzssrc.json          → configuração global (ex: preferências pessoais, futuras credenciais de IA)
+./.abzssrc.json (projeto) → sobrescreve campos específicos para esse projeto, se existir
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/5.4.84/src/commands/plugins/inspect.ts)_
+Nenhum dos dois é obrigatório — na ausência de ambos, o ABZSS usa valores padrão sensatos. Isso evita que dados sensíveis (como uma futura API key de IA) sejam versionados sem querer dentro de um repositório de projeto.
 
-## `abz plugins install PLUGIN`
+## Status atual
 
-Installs a plugin into abz.
+O projeto está em fase de MVP. Progresso até agora:
 
-```
-USAGE
-  $ abz plugins install PLUGIN... [--json] [-f] [-h] [-s | -v]
+- [x] Estrutura de pastas e Clean Architecture definidas
+- [x] CLI inicializado com Oclif (`@oclif/core` v4, ESM, TypeScript 5)
+- [x] `abz doctor` — diagnóstico de ambiente (Node.js, Git, Configuração)
+- [x] Sistema de configuração (`.abzssrc`) com Zod, global + por projeto
+- [x] `abz git review` — branch atual, arquivos staged, modificados e não rastreados
+- [x] `abz open vscode` — abre o projeto ou um caminho específico no VS Code
+- [x] `abz docker status` — verifica instalação e daemon do Docker
+- [ ] `abz ask` — Assistant Agent (pausado: depende de orçamento para API de IA)
+- [ ] `abz clean` — Clean Agent (pausado: mesma dependência)
+- [ ] `abz docker restart` — gerenciamento de containers (pausado: aguardando ambiente Docker para testes)
+- [ ] Integrações: Oracle, Oracle APEX
+- [ ] Sistema de plugins de terceiros
+- [ ] `abz workflow run` — automação de workflows customizados
 
-ARGUMENTS
-  PLUGIN...  Plugin to install.
+Todo comando implementado tem testes unitários (usando dublês/fakes das dependências externas, para não depender de ferramentas de terceiros estarem instaladas) e passa em lint sem erros.
 
-FLAGS
-  -f, --force    Force npm to fetch remote resources even if a local copy exists on disk.
-  -h, --help     Show CLI help.
-  -s, --silent   Silences npm output.
-  -v, --verbose  Show verbose npm output.
+## Instalação (desenvolvimento)
 
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Installs a plugin into abz.
-
-  Uses npm to install plugins.
-
-  Installation of a user-installed plugin will override a core plugin.
-
-  Use the ABZ_NPM_LOG_LEVEL environment variable to set the npm loglevel.
-  Use the ABZ_NPM_REGISTRY environment variable to set the npm registry.
-
-ALIASES
-  $ abz plugins add
-
-EXAMPLES
-  Install a plugin from npm registry.
-
-    $ abz plugins install myplugin
-
-  Install a plugin from a github url.
-
-    $ abz plugins install https://github.com/someuser/someplugin
-
-  Install a plugin from a github slug.
-
-    $ abz plugins install someuser/someplugin
+```bash
+git clone https://github.com/adyshavefear/abzss.git
+cd abzss
+npm install
+npm run build
+./bin/run.js doctor
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/5.4.84/src/commands/plugins/install.ts)_
+## Comandos disponíveis hoje
 
-## `abz plugins link PATH`
-
-Links a plugin into the CLI for development.
-
-```
-USAGE
-  $ abz plugins link PATH [-h] [--install] [-v]
-
-ARGUMENTS
-  PATH  [default: .] path to plugin
-
-FLAGS
-  -h, --help          Show CLI help.
-  -v, --verbose
-      --[no-]install  Install dependencies after linking the plugin.
-
-DESCRIPTION
-  Links a plugin into the CLI for development.
-
-  Installation of a linked plugin will override a user-installed or core plugin.
-
-  e.g. If you have a user-installed or core plugin that has a 'hello' command, installing a linked plugin with a 'hello'
-  command will override the user-installed or core plugin implementation. This is useful for development work.
-
-
-EXAMPLES
-  $ abz plugins link myplugin
+```bash
+abz doctor                    # diagnóstico do ambiente (Node, Git, Configuração)
+abz git review                 # estado atual do repositório Git
+abz open vscode [caminho]       # abre o projeto (ou caminho) no VS Code
+abz docker status                # verifica instalação e daemon do Docker
+abz help                          # ajuda geral
+abz plugins                        # lista plugins instalados
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/5.4.84/src/commands/plugins/link.ts)_
+Todos os demais comandos mencionados neste README fazem parte do roadmap e ainda não estão implementados.
 
-## `abz plugins remove [PLUGIN]`
+## Testes
 
-Removes a plugin from the CLI.
-
-```
-USAGE
-  $ abz plugins remove [PLUGIN...] [-h] [-v]
-
-ARGUMENTS
-  [PLUGIN...]  plugin to uninstall
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Removes a plugin from the CLI.
-
-ALIASES
-  $ abz plugins unlink
-  $ abz plugins remove
-
-EXAMPLES
-  $ abz plugins remove myplugin
+```bash
+npm test
 ```
 
-## `abz plugins reset`
+Roda a suíte completa (Mocha + Chai) seguida de lint (ESLint). Todos os testes usam dublês das dependências externas (Git, Docker, VS Code), portanto rodam de forma consistente em qualquer máquina, mesmo sem essas ferramentas instaladas.
 
-Remove all user-installed and linked plugins.
+## Contribuindo
 
-```
-USAGE
-  $ abz plugins reset [--hard] [--reinstall]
+Todo módulo novo deve seguir SOLID, Clean Code, DRY, KISS e baixo acoplamento. Nenhuma implementação é aceita sem testes correspondentes e sem passar no lint (`npm test`, que já roda ambos). Decisões de arquitetura devem ser justificadas — vantagens, desvantagens e alternativas consideradas — antes de implementadas.
 
-FLAGS
-  --hard       Delete node_modules and package manager related files in addition to uninstalling plugins.
-  --reinstall  Reinstall all plugins after uninstalling.
-```
+## Licença
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/5.4.84/src/commands/plugins/reset.ts)_
-
-## `abz plugins uninstall [PLUGIN]`
-
-Removes a plugin from the CLI.
-
-```
-USAGE
-  $ abz plugins uninstall [PLUGIN...] [-h] [-v]
-
-ARGUMENTS
-  [PLUGIN...]  plugin to uninstall
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Removes a plugin from the CLI.
-
-ALIASES
-  $ abz plugins unlink
-  $ abz plugins remove
-
-EXAMPLES
-  $ abz plugins uninstall myplugin
-```
-
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/5.4.84/src/commands/plugins/uninstall.ts)_
-
-## `abz plugins unlink [PLUGIN]`
-
-Removes a plugin from the CLI.
-
-```
-USAGE
-  $ abz plugins unlink [PLUGIN...] [-h] [-v]
-
-ARGUMENTS
-  [PLUGIN...]  plugin to uninstall
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Removes a plugin from the CLI.
-
-ALIASES
-  $ abz plugins unlink
-  $ abz plugins remove
-
-EXAMPLES
-  $ abz plugins unlink myplugin
-```
-
-## `abz plugins update`
-
-Update installed plugins.
-
-```
-USAGE
-  $ abz plugins update [-h] [-v]
-
-FLAGS
-  -h, --help     Show CLI help.
-  -v, --verbose
-
-DESCRIPTION
-  Update installed plugins.
-```
-
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/5.4.84/src/commands/plugins/update.ts)_
-<!-- commandsstop -->
+MIT
