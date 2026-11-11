@@ -19,7 +19,7 @@ export class OpenEditorService {
       return {isAvailable: true, opened: false, path: resolvedPath}
     }
 
-    const opened = this.editor.open(resolvedPath)
+    const opened = await this.editor.open(resolvedPath)
     return {isAvailable: true, opened, path: resolvedPath}
   }
 }

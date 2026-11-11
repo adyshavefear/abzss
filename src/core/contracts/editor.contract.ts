@@ -6,5 +6,5 @@ export interface OpenEditorResult {
 
 export interface Editor {
   isAvailable(): boolean
-  open(path: string): boolean
+  open(path: string): boolean | Promise<boolean>
 }

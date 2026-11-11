@@ -20,6 +20,12 @@ class FakeEditor implements Editor {
 }
 
 describe('OpenEditorService', () => {
+  it('waits for an asynchronous editor failure', async () => {
+    const editor: Editor = {isAvailable: () => true, open: async () => false}
+    const result = await new OpenEditorService(editor).run('.')
+    expect(result.opened).to.equal(false)
+  })
+
   it('retorna isAvailable false quando o editor não está instalado', async () => {
     const service = new OpenEditorService(new FakeEditor(false))
     const result = await service.run('.')
