@@ -12,13 +12,14 @@ export class VscodeAdapter implements Editor {
     }
   }
 
-  open(path: string): boolean {
-    try {
+  async open(path: string): Promise<boolean> {
+    return new Promise((resolve) => {
       const child = spawn('code', [path], {detached: true, stdio: 'ignore'})
-      child.unref()
-      return true
-    } catch {
-      return false
-    }
+      child.once('error', () => resolve(false))
+      child.once('spawn', () => {
+        child.unref()
+        resolve(true)
+      })
+    })
   }
 }
