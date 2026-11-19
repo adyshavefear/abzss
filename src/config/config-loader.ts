@@ -17,7 +17,8 @@ function readJsonIfExists(path: string): Record<string, unknown> | undefined {
     const raw = readFileSync(path, 'utf8')
     return JSON.parse(raw) as Record<string, unknown>
   } catch (error) {
-    throw new Error(`Falha ao ler ${path}: ${(error as Error).message}`)
+    const reason = error instanceof SyntaxError ? 'JSON inválido' : (error as Error).message
+    throw new Error(`Falha ao ler ${path}: ${reason}`)
   }
 }
 
@@ -29,6 +30,10 @@ export function loadConfig(): AbzssConfig {
     ...defaultConfig,
     ...globalRaw,
     ...projectRaw,
+    connections: {
+      ...(globalRaw?.connections as object | undefined),
+      ...(projectRaw?.connections as object | undefined),
+    },
     output: {
       ...defaultConfig.output,
       ...(globalRaw?.output as object | undefined),

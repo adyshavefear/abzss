@@ -1,6 +1,6 @@
 # ABZSS — Abyss System
 
-> Uma plataforma de automação para desenvolvedores que transforma o terminal na sua central de comando.
+> A database development CLI, starting with Oracle and APEX.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-green)](https://nodejs.org)
@@ -8,122 +8,163 @@
 
 ---
 
-## O que é o ABZSS
+## What is ABZSS?
 
-ABZSS (lê-se *Abyss*) não é apenas mais uma CLI. É uma **plataforma modular de automação e assistência ao desenvolvedor**, construída para crescer ao longo de anos sem que seu núcleo precise ser reescrito.
+ABZSS (pronounced *Abyss*) brings together Oracle connections, queries, SQL execution, object diagnostics, and APEX exports. Git, Docker, and editor commands remain available as supporting tools.
 
-A ideia central: o terminal já é onde desenvolvedores passam boa parte do dia — rodando comandos, gerenciando repositórios, subindo containers, escrevendo código. O ABZSS quer ser a camada inteligente que une automação do sistema operacional, integração com ferramentas de desenvolvimento e Inteligência Artificial em um único lugar, sem sair do terminal.
+## Oracle and APEX
+
+Configure connections in `~/.abzssrc.json` or your project's `.abzssrc.json`. Local profiles replace global profiles with the same name. Passwords come from environment variables; keep credentials out of Git.
+
+```json
+{
+  "connections": {
+    "dev": {
+      "user": "APP_USER",
+      "connectString": "localhost:1521/FREEPDB1",
+      "passwordEnv": "ABZ_DEV_PASSWORD"
+    }
+  }
+}
+```
+
+If SQL Developer or SQLcl already uses Oracle Net, run `abz db aliases` and use one of the listed aliases as the profile's `connectString`. ABZSS uses the directory set in `TNS_ADMIN` or, when unset, looks for `~/Oracle/network/admin/tnsnames.ora`. The alias list reads local configuration without opening a database session. Basic SQL Developer connections can also be represented as `host:port/service`.
+
+In Bash, enter the password without adding it to your shell history:
 
 ```bash
-abz doctor              # diagnostica o ambiente
-abz git review           # revisa o estado do repositório Git
-abz open vscode           # abre o projeto (ou um caminho) no VS Code
-abz docker status          # verifica se o Docker está instalado e rodando
-abz ask "explique esse erro de SQL"    # (planejado)
-abz clean                                # (planejado)
-abz apex deploy                           # (planejado)
-abz plugin install oracle-apex             # (planejado)
+read -rs -p 'Oracle password: ' ABZ_DEV_PASSWORD
+export ABZ_DEV_PASSWORD
+abz db doctor --connection dev
+abz db ping --connection dev
+abz db query --connection dev --file query.sql
+abz db run --connection dev --file change.sql --execute
+abz db invalid --connection dev --schema APP_USER
+abz db errors --connection dev --schema APP_USER
+abz db health --connection dev
+abz apex inspect --connection dev
+abz apex inspect 100 --connection dev
+abz apex export --connection dev --app 100 --output f100.sql
 ```
 
-## Filosofia
+Without `--connection`, ABZSS uses the `default` profile. The legacy `oracle` configuration is still supported and takes precedence in that case. Without `passwordEnv`, a profile uses `ABZ_ORACLE_PASSWORD`. Add profiles with their own password variables for other environments.
 
-Três princípios guiam toda decisão de arquitetura e código no ABZSS:
+- `db doctor` shows the local Oracle Net directory, checks the profile and password configuration, and opens an Oracle session. It exits with code 1 on failure and uses the driver error to suggest what to check for TNS, network, listener, service, or authentication problems.
+- `db ping` reports the authenticated user, database, container, service, and current schema.
+- `db health` reports tablespace utilization and counts user sessions by status for the connected instance. It runs SELECTs and requires read access to `DBA_TABLESPACE_USAGE_METRICS` and `SYS.V_$SESSION`. Use a profile with those specific grants.
+- `db query` accepts SELECT statements, uses a read-only transaction, and returns up to 1,000 rows as JSON. This version does not support pagination; use filters for larger result sets.
+- `db run` accepts **one SQL statement or PL/SQL block per file**. It supports a trailing SQL semicolon (`;`) and `/` on the final line for PL/SQL. It does not interpret SQL*Plus/SQLcl scripts, `&` substitutions, `@` commands, or files containing multiple independent statements.
+- `--execute` authorizes actual execution. DML is committed on success; errors trigger a rollback. **DDL and explicit commits inside PL/SQL cannot be undone by this rollback.** Use an account with minimal privileges and check the displayed target before running commands.
+- `db invalid` lists invalid objects visible to the connection. `db errors` shows visible compilation errors with line and position. Both default to the connected user, accept `--schema` with the exact owner name as stored in Oracle (usually uppercase), and exit with code 1 when they find rows. The reports can be used as checks after a deployment.
+- APEX requires access to its views and the `APEX_EXPORT` package in the correct workspace context. Exports produce a single SQL file, never overwrite an existing file, and should be reviewed before committing to version control.
+- Connections have a 10-second connection timeout and a 30-second timeout per database call. The driver uses Thin mode; older databases or environments requiring Thick mode/Oracle Client are not supported in this version.
 
-- **Automação inteligente** — tarefas repetitivas devem ser eliminadas, não documentadas.
-- **Arquitetura modular** — nenhum módulo novo deve exigir alterar o núcleo existente.
-- **Código limpo e escalável** — construído para ser mantido por uma equipe, não só por uma pessoa.
+References: [Oracle driver transactions](https://node-oracledb.readthedocs.io/en/stable/user_guide/txn_management.html) and [APEX export API](https://docs.oracle.com/en/database/oracle/application-express/19.2/aeapi/GET_APPLICATION_Function.html).
 
-Nenhuma decisão é tomada pensando apenas no presente. Cada peça do sistema é implementada já prevendo integrações futuras.
+## Philosophy
 
-## Para quem é
+Three principles guide architectural and implementation decisions in ABZSS:
 
-O ABZSS é pensado para desenvolvedores e equipes que:
+- **Intelligent automation** — eliminate repetitive tasks instead of documenting them.
+- **Modular architecture** — adding a module should not require changing the existing core.
+- **Clean, scalable code** — build software that a team can maintain, rather than relying on a single person.
 
-- Trabalham fortemente pelo terminal e querem automatizar o ambiente de desenvolvimento.
-- Usam múltiplas ferramentas no dia a dia (Git, Docker, VS Code, bancos Oracle, Oracle APEX) e querem orquestrá-las de um lugar só.
-- Querem IA integrada ao fluxo de trabalho — não como um chat separado, mas como parte do próprio CLI.
-- Valorizam arquitetura limpa e extensibilidade a longo prazo, em vez de scripts descartáveis.
+Decisions consider future integrations as well as current needs.
 
-## Agentes de IA (planejado)
+## Who is it for?
 
-O ABZSS terá dois agentes com responsabilidades bem separadas. Essa fase está pausada no momento — ver seção **Status atual**.
+ABZSS is designed for developers and teams who:
+
+- Work extensively in the terminal and want to automate their development environment.
+- Use multiple tools daily (Git, Docker, VS Code, Oracle Database, Oracle APEX) and want to manage them from one place.
+- Want AI integrated into their workflow as part of the CLI.
+- Value clean architecture and long-term extensibility over disposable scripts.
+
+## AI agents (planned)
+
+ABZSS is planned to include two agents with distinct responsibilities. This phase is currently paused; see **Current status**.
 
 ### Assistant Agent
-Responsável por explicar código, tirar dúvidas, interpretar erros e ensinar tecnologias (SQL, PL/SQL, JavaScript, Node, Oracle APEX). **Nunca modifica arquivos** — é somente consultivo.
+
+Explains code, answers questions, interprets errors, and teaches technologies such as SQL, PL/SQL, JavaScript, Node.js, and Oracle APEX. **Never modifies files**; it provides advice only.
 
 ### Clean Agent
-Responsável por refatoração, padronização, nomenclatura, organização e boas práticas (SOLID, Clean Code). **Pode modificar arquivos**, mas sempre mediante aprovação explícita do usuário antes de qualquer alteração.
 
-## Arquitetura
+Handles refactoring, consistency, naming, organization, and good practices such as SOLID and Clean Code. **May modify files**, but only after explicit user approval for any changes.
 
-O projeto segue Clean Architecture, com separação estrita de responsabilidades entre camadas:
+## Architecture
 
-```
+The project follows Clean Architecture, separating responsibilities across layers. The layout below includes planned modules:
+
+```text
 abzss/
-├── bin/                 # Entry points executáveis (Oclif)
+├── bin/                 # Executable entry points (Oclif)
 ├── src/
-│   ├── commands/        # Comandos Oclif — apenas parsing, sem lógica de negócio
-│   ├── core/             # Contratos (interfaces), erros customizados, event bus
-│   ├── services/         # Regras de negócio — orquestram core + integrations
-│   ├── integrations/     # Adapters externos (Git, Docker, Oracle, APEX, VS Code)
-│   ├── agents/            # Assistant Agent, Clean Agent, abstração de provedor de IA
-│   ├── cli/ui/            # Formatação de terminal (Chalk, Ora)
-│   ├── hooks/              # Hooks Oclif (ex: banner ASCII ao rodar sem comando)
-│   ├── plugins/           # Sistema de plugins carregáveis dinamicamente
-│   ├── config/            # Configuração validada com Zod (global + por projeto)
-│   ├── prompts/           # Templates de prompt para os agentes de IA
-│   └── templates/         # Scaffolds de geração de código
+│   ├── commands/        # Oclif commands and CLI input handling
+│   ├── core/            # Contracts (interfaces); custom errors and event bus planned
+│   ├── services/        # Business rules and orchestration
+│   ├── integrations/    # External adapters (Git, Docker, Oracle, APEX, VS Code)
+│   ├── agents/          # Planned: Assistant Agent, Clean Agent, AI provider abstraction
+│   ├── cli/ui/          # Terminal output formatting
+│   ├── hooks/           # Oclif hooks (e.g. ASCII banner when no command is given)
+│   ├── plugins/         # Planned: dynamically loaded plugins
+│   ├── config/          # Zod-validated global and project configuration
+│   ├── prompts/         # Planned: prompt templates for AI agents
+│   └── templates/       # Planned: code generation scaffolds
 ├── test/
 └── docs/
 ```
 
-O princípio central: `services/` nunca depende diretamente de `integrations/` — depende de uma interface definida em `core/contracts/`. Trocar a forma como o ABZSS fala com o Docker, por exemplo, nunca deveria exigir tocar em mais de um arquivo. Cada integração segue o mesmo fluxo: **contrato → adapter → service → printer → command**.
+The architectural goal is for services to depend on interfaces in `core/contracts/`, keeping external adapters replaceable. Some current services also create adapters directly. The general integration flow is **contract → adapter → service → printer → command**.
 
-## Stack tecnológica
+## Technology stack
 
-| Camada | Tecnologia | Motivo |
+| Layer | Technology | Rationale |
 |---|---|---|
-| Runtime | Node.js ≥ 18 | Padrão de mercado, ecossistema maduro |
-| Linguagem | TypeScript 5 (ESM) | Tipagem forte para um projeto de longo prazo |
-| Framework CLI | Oclif (`@oclif/core` v4) | Sistema de plugins nativo, essencial para `abz plugin install` |
-| Terminal UI | Chalk | Output colorido e feedback visual |
-| Validação | Zod | Configuração validada com inferência automática de tipos |
-| IA | SDK abstraído via `agents/provider/` | Permite trocar de provedor de IA sem reescrever os agentes (planejado) |
-| Testes | Mocha + Chai | Testes unitários com fakes/dublês, sem depender de ferramentas externas instaladas |
-| Lint | ESLint 9 (flat config) + Prettier | Padrão consistente de código |
+| Runtime | Node.js ≥ 18 | Widely used with a mature ecosystem |
+| Language | TypeScript 5 (ESM) | Strong typing for long-term maintenance |
+| CLI framework | Oclif (`@oclif/core` v4) | Native plugin support for future extensions |
+| Terminal UI | Chalk | Colored output and visual feedback |
+| Validation | Zod | Configuration validation with inferred types |
+| Database | node-oracledb | Oracle Database access in Thin mode |
+| AI (planned) | SDK abstraction through `agents/provider/` | Switch AI providers without rewriting agents |
+| Tests | Mocha + Chai | Unit tests with fakes and test doubles |
+| Lint | ESLint 9 (flat config) + Prettier | Consistent code style |
 
-## Sistema de configuração
+## Configuration
 
-O ABZSS lê configuração de dois lugares, com merge entre eles:
+ABZSS merges configuration from two locations:
 
+```text
+~/.abzssrc.json           → global configuration (e.g. personal preferences)
+./.abzssrc.json           → project-specific overrides, when present
 ```
-~/.abzssrc.json          → configuração global (ex: preferências pessoais, futuras credenciais de IA)
-./.abzssrc.json (projeto) → sobrescreve campos específicos para esse projeto, se existir
-```
 
-Nenhum dos dois é obrigatório — na ausência de ambos, o ABZSS usa valores padrão sensatos. Isso evita que dados sensíveis (como uma futura API key de IA) sejam versionados sem querer dentro de um repositório de projeto.
+Neither file is required. If both are absent, ABZSS uses its defaults. Store passwords in environment variables and keep local configuration out of version control.
 
-## Status atual
+## Current status
 
-O projeto está em fase de MVP. Progresso até agora:
+The project is in the MVP stage. Progress so far:
 
-- [x] Estrutura de pastas e Clean Architecture definidas
-- [x] CLI inicializado com Oclif (`@oclif/core` v4, ESM, TypeScript 5)
-- [x] `abz doctor` — diagnóstico de ambiente (Node.js, Git, Configuração)
-- [x] Sistema de configuração (`.abzssrc`) com Zod, global + por projeto
-- [x] `abz git review` — branch atual, arquivos staged, modificados e não rastreados
-- [x] `abz open vscode` — abre o projeto ou um caminho específico no VS Code
-- [x] `abz docker status` — verifica instalação e daemon do Docker
-- [ ] `abz ask` — Assistant Agent (pausado: depende de orçamento para API de IA)
-- [ ] `abz clean` — Clean Agent (pausado: mesma dependência)
-- [ ] `abz docker restart` — gerenciamento de containers (pausado: aguardando ambiente Docker para testes)
-- [ ] Integrações: Oracle, Oracle APEX
-- [ ] Sistema de plugins de terceiros
-- [ ] `abz workflow run` — automação de workflows customizados
+- [x] Folder structure and architectural foundations
+- [x] CLI initialized with Oclif (`@oclif/core` v4, ESM, TypeScript 5)
+- [x] `abz doctor` — environment diagnostics (Node.js, Git, configuration)
+- [x] Zod-validated configuration (`.abzssrc.json`), global and per project
+- [x] `abz git review` — current branch, staged, modified, and untracked files
+- [x] `abz open vscode` — open the project or a specific path in VS Code
+- [x] `abz docker status` — check Docker installation and daemon status
+- [x] Named Oracle connections with passwords from environment variables
+- [x] `abz db ping`, `query`, `run`, and `errors`
+- [x] `abz apex inspect` and `export`
+- [ ] `abz ask` — Assistant Agent (paused: requires an AI API budget)
+- [ ] `abz clean` — Clean Agent (paused: same dependency)
+- [ ] `abz docker restart` — container management (paused: awaiting a Docker test environment)
+- [ ] Third-party plugin system
+- [ ] `abz workflow run` — custom workflow automation
 
-Todo comando implementado tem testes unitários (usando dublês/fakes das dependências externas, para não depender de ferramentas de terceiros estarem instaladas) e passa em lint sem erros.
+Database tests cover configuration, statement preparation, transaction handling, and the connection adapter using test doubles. Oracle and APEX integration still needs validation against a real database.
 
-## Instalação (desenvolvimento)
+## Installation (development)
 
 ```bash
 git clone https://github.com/adyshavefear/abzss.git
@@ -133,31 +174,38 @@ npm run build
 ./bin/run.js doctor
 ```
 
-## Comandos disponíveis hoje
+## Available commands
 
 ```bash
-abz doctor                    # diagnóstico do ambiente (Node, Git, Configuração)
-abz git review                 # estado atual do repositório Git
-abz open vscode [caminho]       # abre o projeto (ou caminho) no VS Code
-abz docker status                # verifica instalação e daemon do Docker
-abz help                          # ajuda geral
-abz plugins                        # lista plugins instalados
+abz doctor                          # Environment diagnostics
+abz git review                      # Current Git repository status
+abz open vscode [path]              # Open the project or a path in VS Code
+abz docker status                   # Check Docker installation and daemon
+abz db ping --connection dev        # Test an Oracle connection
+abz db query --connection dev --file query.sql
+abz db run --connection dev --file change.sql --execute
+abz db errors --connection dev      # List compilation errors
+abz apex inspect --connection dev   # List APEX applications
+abz apex inspect 100 --connection dev
+abz apex export --connection dev --app 100 --output f100.sql
+abz help                            # General help
+abz plugins                         # List installed plugins
 ```
 
-Todos os demais comandos mencionados neste README fazem parte do roadmap e ainda não estão implementados.
+Commands marked as planned elsewhere in this README are not implemented yet.
 
-## Testes
+## Tests
 
 ```bash
 npm test
 ```
 
-Roda a suíte completa (Mocha + Chai) seguida de lint (ESLint). Todos os testes usam dublês das dependências externas (Git, Docker, VS Code), portanto rodam de forma consistente em qualquer máquina, mesmo sem essas ferramentas instaladas.
+Runs the full Mocha + Chai suite, followed by ESLint on success. Tests use a mix of test doubles and environment checks; some existing diagnostics tests require tools such as Git to be available and executable. Database unit tests do not require a live Oracle instance.
 
-## Contribuindo
+## Contributing
 
-Todo módulo novo deve seguir SOLID, Clean Code, DRY, KISS e baixo acoplamento. Nenhuma implementação é aceita sem testes correspondentes e sem passar no lint (`npm test`, que já roda ambos). Decisões de arquitetura devem ser justificadas — vantagens, desvantagens e alternativas consideradas — antes de implementadas.
+New modules should follow SOLID, Clean Code, DRY, KISS, and loose coupling. Include relevant tests and pass lint (`npm test` runs both). Explain architectural decisions, including benefits, drawbacks, and alternatives, before implementation.
 
-## Licença
+## License
 
 MIT

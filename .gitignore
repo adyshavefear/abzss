@@ -13,3 +13,8 @@ yarn.lock
 pnpm-lock.yaml
 tsconfig.tsbuildinfo
 
+
+# Configuração local e credenciais
+.abzssrc.json
+.env
+.env.*
